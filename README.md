@@ -2,8 +2,9 @@
 Generate a 3-D structure model using Blender as a Python module and export the model in a Blender file.
 
 ## 1 Specify the desired structure
-The structure specification is written in a text file. The script doesn't case about the file ending as long as is text 
-readable. The specification has the format of a 2-D matrix depicting the structure floor plan.
+`-f` or `--floorplan` accepts a text file path containing the structure floor plan specification. The script doesn't case 
+about the file ending as long as is text readable. The specification has the format of a 2-D matrix depicting the 
+structure floor plan. Only single level structures are supported.
 
 The elements of the matrix denote: 
  * the _start_ of wall panels `1`
@@ -44,22 +45,24 @@ Example 3: A walled garden with a studio house in the middle left and a garage a
 ```
 
 ## 2 Choose the building primitives
-The script ony accepts glTF models and trusts the model to be a panel with dimensions of 
-`x:1`, `y:10`, `z:30`.
+`-p` or `--panel` accepts a glTF model file path and trusts the model to be a panel with dimensions of `x:1`, `y:10`, `z:30`.
 
-## 3 Run the script
+## 3 Choose Blender model output directory
+`-s` or `--save` accepts a Blender file path to write the generated 3-D structure model.
+
+## 4 Run the script
 Run the generator with blender in background mode:
 ```shell script
   blender --background --factory-startup \
   --python $HOME/bpy_gen_structure.py -- \
-  --spec=$specs/room.dat \
+  --floorplan=$specs/room.dat \
   --panel=$primitives/panel.glb \
   --save=$models/room.blend
 ```
 or run the generator using Blender as a Python module:
 ```shell script
   python $HOME/bpy_gen_structure.py \
-  --spec=$specs/room.dat \
+  --floorplan=$specs/room.dat \
   --panel=$primitives/panel.glb \
   --save=$models/room.blend
 ```

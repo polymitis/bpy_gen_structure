@@ -6,15 +6,15 @@
 #  Running the generator with blender in background mode:
 #    blender --background --factory-startup \
 #    --python $HOME/bpy_gen_structure.py -- \
-#    --spec=/specs/room.dat\
-#    --panel=/models/panel.glb \
-#    --save=/models/room.blend
+#    --floorplan=$specs/room.dat\
+#    --panel=$primitives/panel.glb \
+#    --save=$models/room.blend
 #
 #  Running the generator using Blender as a Python module:
 #    python $HOME/bpy_gen_structure.py \
-#    --spec=/specs/room.dat \
-#    --panel=/models/panel.glb \
-#    --save=/models/room.blend
+#    --floorplan=$specs/room.dat \
+#    --panel=$primitives/panel.glb \
+#    --save=$models/room.blend
 #
 # Notice:
 # '--factory-startup' is used to avoid the user default settings from
