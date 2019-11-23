@@ -1,3 +1,5 @@
+![Logo image](logo.png)
+
 # bpy_gen_structure
 Generate a 3-D structure model using Blender as a Python module and export the model in a Blender file.
 
