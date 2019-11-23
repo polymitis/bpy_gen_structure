@@ -59,36 +59,7 @@ def assemble_level(plan, panel):
                                               TRANSFORM_OT_translate={"value": (2 * x + 2, 2 * y, 0)})
 
 
-def gen_structure(floorplan_path, panel_path, save_path):
-    # Clear existing objects.
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-
-    # Load specification
-    with open(floorplan_path, 'r') as floorplan:
-        # noinspection PyTypeChecker
-        plan = np.loadtxt(floorplan)
-
-    # load panel object
-    bpy.ops.import_scene.gltf(filepath=panel_path)
-    panel = bpy.context.selected_objects[0]
-
-    # create panel material
-    bpy.context.scene.render.engine = 'CYCLES'
-    mat_name = "panel_material"
-    mat = (bpy.data.materials.get(mat_name) or bpy.data.materials.new(mat_name))
-    panel.data.materials.append(mat)
-    mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    links = mat.node_tree.links
-    # clear all default nodes
-    while nodes:
-        nodes.remove(nodes[0])
-    shd_bump = nodes.new("ShaderNodeBump")
-    shd_tex_voronoi = nodes.new("ShaderNodeTexVoronoi")
-    shd_out_mat = nodes.new("ShaderNodeOutputMaterial")
-    links.new(shd_tex_voronoi.inputs['Vector'], shd_bump.outputs['Normal'])
-    links.new(shd_out_mat.inputs['Surface'], shd_tex_voronoi.outputs['Color'])
-
+def gen_structure(plan, panel):
     # assemble structure
     assemble_level(plan, panel)
 
@@ -101,11 +72,34 @@ def gen_structure(floorplan_path, panel_path, save_path):
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.join()
 
-    # save blender file
-    bpy.ops.wm.save_as_mainfile(filepath=save_path)
+
+def add_bump_voronoi_material(panel):
+    mat_name = 'bump_voronoi'
+    material = bpy.data.materials.get(mat_name)
+    # create the material if it doesn't already exist
+    if not material:
+        # create an empty material
+        material = bpy.data.materials.new(mat_name)
+        material.use_nodes = True
+        nodes = material.node_tree.nodes
+        links = material.node_tree.links
+
+        # clear all default nodes
+        while nodes:
+            nodes.remove(nodes[0])
+
+        # connect a default bump shader to a default Voronoi texture shader and to the output
+        shd_bump = nodes.new("ShaderNodeBump")
+        shd_tex_voronoi = nodes.new("ShaderNodeTexVoronoi")
+        shd_out_mat = nodes.new("ShaderNodeOutputMaterial")
+        links.new(shd_tex_voronoi.inputs['Vector'], shd_bump.outputs['Normal'])
+        links.new(shd_out_mat.inputs['Surface'], shd_tex_voronoi.outputs['Color'])
+
+    # add material to panel
+    panel.data.materials.append(material)
 
 
-def main():
+def get_cmd_input():
     import sys  # to get command line args
     import argparse  # to parse options for us and print a nice help message
 
@@ -120,14 +114,14 @@ def main():
     usage_text = (
             "Run blender in background mode with this script:"
             "  blender --background --python " + __file__ + " -- [options]"
-                                                            "          --floorplan=/specs/room.dat"
-                                                            "          --panel=/models/panel.glb"
-                                                            "          --save=/models/room.blend"
+                                                            " --floorplan=$specs/room.dat"
+                                                            " --panel=$primitives/panel.glb"
+                                                            " --save=$models/room.blend "
             "or run it directly if blender as module is installed:"
             "  python " + __file__ + " --[options]"
-                                     "          --floorplan=/specs/room.dat"
-                                     "          --panel=/models/panel.glb"
-                                     "          --save=/models/room.blend"
+            "                          --floorplan=/specs/room.dat"
+            "                          --panel=/models/panel.glb"
+            "                          --save=/models/room.blend "
     )
 
     parser = argparse.ArgumentParser(description=usage_text)
@@ -151,25 +145,50 @@ def main():
 
     if not argv:
         parser.print_help()
-        return
+        exit(-1)
 
     if not args.floorplan_path:
         print("Error: --floorplan=<Floorplan file path> argument not given, aborting.")
         parser.print_help()
-        return
+        exit(-1)
 
     if not args.panel_path:
         print("Error: --panel_path=<Panel object file path> argument not given, aborting.")
         parser.print_help()
-        return
+        exit(-1)
 
     if not args.save_path:
         print("Error: --save_path=<Output blender file path> argument not given, aborting.")
         parser.print_help()
-        return
+        exit(-1)
 
-    gen_structure(os.path.abspath(args.floorplan_path), os.path.abspath(args.panel_path),
-                  os.path.abspath(args.save_path))
+    return args.floorplan_path, args.panel_path, args.save_path
+
+
+def main():
+    # get command line inputs
+    [plan_path, panel_path, save_path] = get_cmd_input()
+
+    # clear existing objects
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+
+    # load specification
+    with open(os.path.abspath(plan_path), 'r') as plan_file:
+        # noinspection PyTypeChecker
+        plan = np.loadtxt(plan_file)
+
+    # load panel object
+    bpy.ops.import_scene.gltf(filepath=os.path.abspath(panel_path))
+    panel = bpy.context.selected_objects[0]
+
+    # add panel material
+    add_bump_voronoi_material(panel)
+
+    # generate level structure
+    gen_structure(plan, panel)
+
+    # save blender file
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(save_path))
 
     print("batch job finished, exiting")
 
