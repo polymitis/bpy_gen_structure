@@ -28,6 +28,26 @@ import numpy as np
 import os
 
 
+def make_movie(path):
+    # TODO Move the camera on path and capture a movie.
+    pass
+
+
+def find_camera_path(plan):
+    # TODO Return the a route to visit all rooms.
+    return False
+
+
+def add_camera(plan):
+    # TODO Add a camera at symbol location in the plan.
+    pass
+
+
+def add_lights(plan):
+    # TODO Add a strong point light high at the middle of the plan.
+    pass
+
+
 def assemble_level(plan, panel):
     for x in range(len(plan) - 1):
         for y in range(len(plan[0]) - 1):
@@ -186,6 +206,18 @@ def main():
 
     # generate level structure
     gen_structure(plan, panel)
+
+    # add lights to structure
+    add_lights(plan)
+
+    # add camera to structure
+    add_camera(plan)
+
+    # find camera path
+    path = find_camera_path(plan)
+
+    # walk and render video
+    make_movie(path)
 
     # save blender file
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(save_path))
