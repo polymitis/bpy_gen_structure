@@ -44,7 +44,14 @@ def add_camera(plan):
 
 
 def add_lights(plan):
-    # TODO Add a strong point light high at the middle of the plan.
+    # find the middle of the plan
+    num_cols = len(plan)
+    num_rows = len(plan[0])
+    # add a strong point light high at the middle of the plan.
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.light_add(type='POINT', location=(num_cols, num_rows, max(num_cols, num_rows)))
+    light = bpy.context.selected_objects[0]
+    light.data.energy = 1000  # Watt
     pass
 
 
